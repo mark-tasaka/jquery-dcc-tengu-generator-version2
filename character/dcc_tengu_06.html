@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dungeon Crawl Classics Tengu Character Generator</title>
+    
+	<meta charset="UTF-8">
+	<meta name="description" content="Dungeon Crawl Classics tengu Character Generator. Goodman Games.">
+	<meta name="keywords" content="Dungeon Crawl Classics, Goodman Games,HTML5,CSS,JavaScript">
+	<meta name="author" content="Mark Tasaka 2017">
+	<link rel="stylesheet" type="text/css" href="css/dcc_tengu.css">
+    
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    
+    <script type="text/javascript" src="./js/dieRoll.js"></script>
+    <script type="text/javascript" src="./js/abilityScoreMod.js"></script>
+    <script type="text/javascript" src="./js/occupations.js"></script>
+    <script type="text/javascript" src="./js/luckySign.js"></script>
+    <script type="text/javascript" src="./js/tenguLanguages.js"></script>
+    <script type="text/javascript" src="./js/adjustments.js"></script>
+    
+    
+	
+</head>
+<body>
+	
+
+	
+   
+  <img id="character_sheet"/>
+   <section>
+    	<p id="name"></p>
+	
+		<span id="strength"></span> <span id="strengthMod"></span>
+		<span id="agility"></span>  <span id="agilityMod"></span>
+		<span id="stamina"></span>  <span id="staminaMod"></span>
+		<span id="personality"></span> <span id="personalityMod"></span>
+		<span id="intelligence"></span> <span id="intelligenceMod"></span>
+		<span id="luck"></span> <span id="luckMod"></span>
+	
+    	<p id="occupation"></p>
+
+	   <p id="luckySignDescription"><span id="luckySignNotes"></span>: <span id="luckyRoll"></span> (Bonus: <span id="luckySignBonus"></span>)</p>
+
+	   <p id="level"></p>
+	   
+	  
+	  <p id="title"></p>
+	   <p id="hitPoints"></p>
+
+		<span id="baseArmourClass"></span>
+	   
+	   <P id="languages"><span id="baseLanguages"></span><span id="bonusLanguages"></span></P>
+	   
+	   
+	   <span id="zeroWeapon"></span>
+	   
+	   <span id="fumbleDie"></span>
+	   <span id="init"></span>
+	   <span id="speed"></span>	   
+	   <span id="critDie"></span>
+	   <span id="critTable"></span>
+	   <span id="actionDie"></span>
+	   <span id="luckDie"></span>
+	   
+	   <span id="melee"></span>	   
+	   <span id="range"></span>
+ 
+	   <span id="ref"></span>
+	   <span id="fort"></span>
+	   <span id="will"></span>
+	   
+	   
+	   <span id="luckRecovery"></span>
+	   <span id="backstab"></span>
+	   <span id="sneak"></span>
+	   <span id="hide"></span>
+	   <span id="pickPocket"></span>
+	   <span id="climb"></span>
+	   <span id="pickLock"></span>
+	   <span id="findTrap"></span>
+	   <span id="disableTrap"></span>
+	   <span id="forgeDocument"></span>
+	   <span id="disguiseSelf"></span>
+	   <span id="readLanguages"></span>
+	   <span id="handlePoison"></span>
+	   <span id="castSpell"></span>
+
+
+	</section>
+	
+
+		
+  <script>
+	  
+
+	  
+	/*
+	 Character() - tengu Character Constructor
+	*/
+	function Character() {
+	
+    var strength = rollDice(6, 3, 0, 0);
+    var agility = rollDice(8, 1, 0, 10);
+    var stamina = rollDice(6, 3, 0, 0);
+    var	personality = rollDice(6, 3, 0, 0);
+    var	intelligence = rollDice(6, 3, 0, 0);
+    var	luck = rollDice(6, 1, 0, 12);
+	var	occupation = getOccupation();
+	var birthAugur = getLuckySign();
+	var strengthModifier = getStrengthModifier(strength);
+	var staminaModifier = getStaminaModifier(stamina);
+	var agilityModifier = getAgilityModifier(agility);
+	var personalityModifier = getPersonalityModifier(personality);
+	var intelligenceModifier = getIntelligenceModifier(intelligence);
+	var luckModifier = getLuckModifier(luck);
+	var baseAC = getBaseArmourClass(agilityModifier) + adjustAC(birthAugur, luckModifier);
+	var tengu = getTengu();
+
+		var tenguGenerator = {
+			"name": "",
+			"strength": strength,
+			"agility": agility,
+			"stamina": stamina,
+			"personality": personality,
+			"intelligence": intelligence,
+			"luck": luck,
+			"strengthModifier": strengthModifier,
+			"agilityModifier": agilityModifier,
+			"staminaModifier": staminaModifier,
+			"personalityModifier": personalityModifier,
+			"intelligenceModifier": intelligenceModifier,
+			"luckModifier":  luckModifier,
+			"occupation":  occupation.occupation,
+			"luckySign": birthAugur.luckySign,
+			"luckyRoll": birthAugur.luckyRoll,
+			"luckySignBonus": luckModifier,
+			"baseArmourClass": baseAC,
+			"level": tengu.level,
+			"title": tengu.title,
+			"baseLanguages": "Common, Tengu", 
+			"bonusLanguages": getBonusLanguages (intelligenceModifier, birthAugur, luckModifier),
+			"zeroWeapon": occupation.trainedWeapon,
+			"fumbleDie": "d4" + addSign(adjustFumble(birthAugur, luckModifier)),
+			"init": agilityModifier + adjustInit(birthAugur, luckModifier),
+			"speed": 30 + addLuckToSpeed(birthAugur, luckModifier) + "'",
+			"hitPoints": hitPoints (tengu, staminaModifier, hitPointAdjustPerLevel(birthAugur, luckModifier)),
+			"critDie": tengu.critDice + "" + addSign(adjustCrit(birthAugur, luckModifier) + addCritBonus(tengu)),
+			"critTable": tengu.critTable,
+			"actionDie": tengu.actionDice,
+			"luckDie": tengu.luckDie,
+			"melee": tengu.attackBonus + strengthModifier + meleeAdjust(birthAugur, luckModifier),
+			"range": tengu.attackBonus + agilityModifier + rangeAdjust(birthAugur, luckModifier),
+			"ref": tengu.ref + agilityModifier + adjustRef(birthAugur, luckModifier),
+			"fort": tengu.fort + staminaModifier + adjustFort(birthAugur,luckModifier),
+			"will": tengu.will + personalityModifier + adjustWill(birthAugur, luckModifier),
+			"luckRecovery": tengu.luckRecovery,
+			"backstab": tengu.backstab,
+			"sneak": tengu.sneak + agilityModifier,
+			"hide": tengu.hideInShadows + agilityModifier,
+			"pickPocket": tengu.pickPockets + agilityModifier,
+			"climb": tengu.climb + agilityModifier,
+			"pickLock": tengu.pickLock + agilityModifier,
+			"findTrap": tengu.findTrap + intelligenceModifier,
+			"disableTrap": tengu.disableTrap + agilityModifier,
+			"forgeDocument": tengu.forgeDocuments + agilityModifier,
+			"disguiseSelf": tengu.disguiseSelf + personalityModifier,
+			"readLanguages": tengu.readLanguages + intelligenceModifier,
+			"handlePoison": tengu.handlePoison,
+			"castSpell": tengu.castSpellFromScroll + "" + addSign(intelligenceModifier)
+		
+
+		}; 
+		return tenguGenerator;
+	  
+	  }
+	  
+
+/*
+getTengu 
+*/
+function getTengu() {
+	var tengu = [
+		
+
+		{"level": 1,
+		 "alignment": "",
+		 "title": "Rascal",
+		 "hd": 1,
+		 "actionDice": "1d20",
+		 "critDice": "1d10",
+		 "critTable": "II",
+		 "luckDie": "d3",
+		 "attackBonus": 0,
+		 "ref": 1,
+		 "fort": 1,
+		 "will": 0,
+		 "luckRecovery": 1,
+		 "backstab": 0,
+		 "sneak": 3,
+		 "hideInShadows": 1,
+		 "pickPockets": 3,
+		 "climb": 3,
+		 "pickLock": 1,
+		 "findTrap": 1,
+		 "disableTrap": 1,
+		 "forgeDocuments": 3,
+		 "disguiseSelf": 0,
+		 "readLanguages": 0,
+		 "handlePoison": 0,
+		 "castSpellFromScroll": "d12"	 
+		},
+		
+		{"level": 2,
+		 "alignment": "",
+		 "title": "Trickster",
+		 "hd": 2,
+		 "actionDice": "1d20",
+		 "critDice": "1d12",
+		 "critTable": "II",
+		 "luckDie": "d4",
+		 "attackBonus": 1,
+		 "ref": 1,
+		 "fort": 1,
+		 "will": 0,
+		 "luckRecovery": 1,
+		 "backstab": 1,
+		 "sneak": 5,
+		 "hideInShadows": 3,
+		 "pickPockets": 5,
+		 "climb": 5,
+		 "pickLock": 3,
+		 "findTrap": 3,
+		 "disableTrap": 3,
+		 "forgeDocuments": 5,
+		 "disguiseSelf": 0,
+		 "readLanguages": 1,
+		 "handlePoison": 0,
+		 "castSpellFromScroll": "d12"	 
+		},
+		
+		{"level": 3,
+		 "alignment": "",
+		 "title": "Mischief-maker",
+		 "hd": 3,
+		 "actionDice": "1d20",
+		 "critDice": "1d14",
+		 "critTable": "II",
+		 "luckDie": "d5",
+		 "attackBonus": 2,
+		 "ref": 2,
+		 "fort": 1,
+		 "will": 1,
+		 "luckRecovery": 2,
+		 "backstab": 2,
+		 "sneak": 7,
+		 "hideInShadows": 5,
+		 "pickPockets": 7,
+		 "climb": 7,
+		 "pickLock": 5,
+		 "findTrap": 5,
+		 "disableTrap": 5,
+		 "forgeDocuments": 7,
+		 "disguiseSelf": 1,
+		 "readLanguages": 2,
+		 "handlePoison": 1,
+		 "castSpellFromScroll": "d14"	 
+		},
+		
+		
+		{"level": 4,
+		 "alignment": "",
+		 "title": "Sneak",
+		 "hd": 4,
+		 "actionDice": "1d20",
+		 "critDice": "1d16",
+		 "critTable": "II",
+		 "luckDie": "d6",
+		 "attackBonus": 3,
+		 "ref": 2,
+		 "fort": 2,
+		 "will": 1,
+		 "luckRecovery": 2,
+		 "backstab": 3,
+		 "sneak": 8,
+		 "hideInShadows": 7,
+		 "pickPockets": 8,
+		 "climb": 8,
+		 "pickLock": 7,
+		 "findTrap": 7,
+		 "disableTrap": 7,
+		 "forgeDocuments": 8,
+		 "disguiseSelf": 2,
+		 "readLanguages": 3,
+		 "handlePoison": 2,
+		 "castSpellFromScroll": "d14"	 
+		},
+		
+		{"level": 5,
+		 "alignment": "",
+		 "title": "Rogue",
+		 "hd": 5,
+		 "actionDice": "1d20",
+		 "critDice": "1d20",
+		 "critTable": "II",
+		 "luckDie": "d7",
+		 "attackBonus": 3,
+		 "ref": 3,
+		 "fort": 2,
+		 "will": 1,
+		 "luckRecovery": 3,
+		 "backstab": 4,
+		 "sneak": 9,
+		 "hideInShadows": 8,
+		 "pickPockets": 9,
+		 "climb": 9,
+		 "pickLock": 8,
+		 "findTrap": 8,
+		 "disableTrap": 8,
+		 "forgeDocuments": 9,
+		 "disguiseSelf": 3,
+		 "readLanguages": 4,
+		 "handlePoison": 3,
+		 "castSpellFromScroll": "d16"	 
+		},
+		
+		
+		{"level": 6,
+		 "alignment": "",
+		 "title": "Rogue",
+		 "hd": 6,
+		 "actionDice": "1d20+1d14",
+		 "critDice": "1d24",
+		 "critTable": "II",
+		 "luckDie": "d8",
+		 "attackBonus": 4,
+		 "ref": 4,
+		 "fort": 2,
+		 "will": 2,
+		 "luckRecovery": 3,
+		 "backstab": 5,
+		 "sneak": 11,
+		 "hideInShadows": 9,
+		 "pickPockets": 11,
+		 "climb": 11,
+		 "pickLock": 9,
+		 "findTrap": 9,
+		 "disableTrap": 9,
+		 "forgeDocuments": 11,
+		 "disguiseSelf": 4,
+		 "readLanguages": 5,
+		 "handlePoison": 4,
+		 "castSpellFromScroll": "d16"	 
+		},
+		
+		{"level": 7,
+		 "alignment": "",
+		 "title": "Rogue",
+		 "hd": 7,
+		 "actionDice": "1d20+1d16",
+		 "critDice": "1d30",
+		 "critTable": "II",
+		 "luckDie": "d10",
+		 "attackBonus": 5,
+		 "ref": 4,
+		 "fort": 3,
+		 "will": 2,
+		 "luckRecovery": 4,
+		 "backstab": 6,
+		 "sneak": 12,
+		 "hideInShadows": 10,
+		 "pickPockets": 12,
+		 "climb": 12,
+		 "pickLock": 10,
+		 "findTrap": 10,
+		 "disableTrap": 10,
+		 "forgeDocuments": 12,
+		 "disguiseSelf": 5,
+		 "readLanguages": 6,
+		 "handlePoison": 5,
+		 "castSpellFromScroll": "d20"	 
+		},
+
+		
+		{"level": 8,
+		 "alignment": "",
+		 "title": "Rogue",
+		 "hd": 8,
+		 "actionDice": "1d20+1d20",
+		 "critDice": "1d30",
+		 "critTable": "II",
+		 "luckDie": "d12",
+		 "attackBonus": 5,
+		 "ref": 5,
+		 "fort": 3,
+		 "will": 2,
+		 "luckRecovery": 4,
+		 "backstab": 7,
+		 "sneak": 13,
+		 "hideInShadows": 11,
+		 "pickPockets": 13,
+		 "climb": 13,
+		 "pickLock": 11,
+		 "findTrap": 11,
+		 "disableTrap": 11,
+		 "forgeDocuments": 13,
+		 "disguiseSelf": 6,
+		 "readLanguages": 7,
+		 "handlePoison": 6,
+		 "castSpellFromScroll": "d20"	 
+		},
+			
+		
+		{"level": 9,
+		 "alignment": "",
+		 "title": "Rogue",
+		 "hd": 9,
+		 "actionDice": "1d20+1d20",
+		 "critDice": "1d30",
+		 "critTable": "II",
+		 "luckDie": "d14",
+		 "attackBonus": 6,
+		 "ref": 5,
+		 "fort": 3,
+		 "will": 3,
+		 "luckRecovery": 5,
+		 "backstab": 8,
+		 "sneak": 14,
+		 "hideInShadows": 12,
+		 "pickPockets": 14,
+		 "climb": 14,
+		 "pickLock": 12,
+		 "findTrap": 12,
+		 "disableTrap": 12,
+		 "forgeDocuments": 14,
+		 "disguiseSelf": 7,
+		 "readLanguages": 8,
+		 "handlePoison": 7,
+		 "castSpellFromScroll": "d20"	 
+		},
+			
+		{"level": 10,
+		 "alignment": "",
+		 "title": "Rogue",
+		 "hd": 10,
+		 "actionDice": "1d20+1d20",
+		 "critDice": "1d30",
+		 "critTable": "II",
+		 "luckDie": "d16",
+		 "attackBonus": 7,
+		 "ref": 6,
+		 "fort": 4,
+		 "will": 3,
+		 "luckRecovery": 5,
+		 "backstab": 9,
+		 "sneak": 15,
+		 "hideInShadows": 13,
+		 "pickPockets": 15,
+		 "climb": 15,
+		 "pickLock": 13,
+		 "findTrap": 13,
+		 "disableTrap": 13,
+		 "forgeDocuments": 15,
+		 "disguiseSelf": 8,
+		 "readLanguages": 9,
+		 "handlePoison": 8,
+		 "castSpellFromScroll": "d20"	 
+		}
+		
+		
+		];
+	
+		return tengu[5];
+}
+
+        var imgData = "images/dcc_tengu.png";
+        document.getElementById("character_sheet").src = imgData;
+
+	  var data = Character();
+		 
+      
+      $("#name").html(data.name);
+      $("#occupation").html(data.occupation);
+      $("#title").html(data.title);
+                
+          $("#strength").html(data.strength);
+          $("#strengthMod").html(addModifierSign(data.strengthModifier));
+          
+          $("#agility").html(data.agility);
+          $("#agilityMod").html(addModifierSign(data.agilityModifier));
+          
+          $("#agility").html(data.agility);
+          $("#agilityMod").html(addModifierSign(data.agilityModifier));
+          
+          $("#stamina").html(data.stamina);
+          $("#staminaMod").html(addModifierSign(data.staminaModifier));
+          
+          $("#personality").html(data.personality);
+          $("#personalityMod").html(addModifierSign(data.personalityModifier));
+          
+          $("#intelligence").html(data.intelligence);
+          $("#intelligenceMod").html(addModifierSign(data.intelligenceModifier));
+          
+          $("#luck").html(data.luck);
+          $("#luckMod").html(addModifierSign(data.luckModifier));
+          
+		 
+      
+      $("#luckySignNotes").html(data.luckySign);
+      $("#luckyRoll").html(data.luckyRoll);
+          
+      $("#luckySignBonus").html(addModifierSign(data.luckySignBonus));
+      $("#level").html(data.level);
+      
+      $("#baseLanguages").html(data.baseLanguages);
+      $("#bonusLanguages").html(data.bonusLanguages);
+      
+      $("#baseArmourClass").html(data.baseArmourClass);
+      $("#hitPoints").html(data.hitPoints);
+      
+      $("#zeroWeapon").html(data.zeroWeapon);
+      $("#fumbleDie").html(data.fumbleDie);
+      
+      $("#init").html(addModifierSign(data.init));
+      $("#speed").html(data.speed);
+      
+      $("#melee").html(addModifierSign(data.melee));
+      $("#range").html(addModifierSign(data.range));
+      $("#ref").html(addModifierSign(data.ref));
+      $("#fort").html(addModifierSign(data.fort));
+      $("#will").html(addModifierSign(data.will));
+      
+      $("#actionDie").html(data.actionDie);
+      $("#critDie").html(data.critDie);
+      $("#critTable").html(data.critTable);
+      
+      $("#luckDie").html(data.luckDie);
+      $("#luckRecovery").html(data.luckRecovery);
+      
+      $("#backstab").html(addModifierSign(data.backstab));
+      $("#sneak").html(addModifierSign(data.sneak));
+      $("#hide").html(addModifierSign(data.hide));
+      $("#pickPocket").html(addModifierSign(data.pickPocket));
+      $("#climb").html(addModifierSign(data.climb));
+      $("#pickLock").html(addModifierSign(data.pickLock));
+      $("#findTrap").html(addModifierSign(data.findTrap));
+      $("#disableTrap").html(addModifierSign(data.disableTrap));
+      $("#forgeDocument").html(addModifierSign(data.forgeDocument));
+      $("#disguiseSelf").html(addModifierSign(data.disguiseSelf));
+      $("#readLanguages").html(addModifierSign(data.readLanguages));
+      $("#handlePoison").html(addModifierSign(data.handlePoison));
+      $("#castSpell").html(data.castSpell);
+		  
+
+  </script>
+		
+	
+    
+</body>
+</html>
